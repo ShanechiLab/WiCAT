@@ -4,7 +4,7 @@ This repository is an anonymized minimal WiCAT codebase for loading a pretrained
 
 ## Included assets
 
-- Pretrained checkpoint: `pretrained_models/best-mae.ckpt`
+- Pretrained checkpoint: `pretrained_models/best-mae.ckpt` (to build this checkpoint, unzip the compressed files under `pretrained_models/pret_weights` and move to `pretrained_models/best-mae.ckpt`  
 - Decoder checkpoint output (after training): `pretrained_models/decoder_head.pt`
 - Small local metadata subset: `pretrained_models/metadata_5257c_local10.csv`
 - Small local segment subset: `pretrained_models/dataset/` (10 processed segment files)
