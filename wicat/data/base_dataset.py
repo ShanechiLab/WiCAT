@@ -51,13 +51,13 @@ class BaseImagingCoreDataset(Dataset):
         os.makedirs(self.processed_raw_data_dir, exist_ok=True)
         if not self._is_raw_data_processed() or self.config.force_reprocess_stage1:
             self.logger.info(
-                "Processed raw dataset do not exist (i.e., spikes (and/or LFP) are not extracted) or reprocessing is enabled, processing starts."
+                "Processed raw dataset do not exist (i.e., images (and/or ) are not extracted) or reprocessing is enabled, processing starts."
             )
             self.process_raw_data()
             self.logger.info("Raw data processing complete.")
         else:
             self.logger.info(
-                "Processed raw data exists (i.e., spikes (and/or LFP) are extracted.)"
+                "Processed raw data exists (i.e., images (and/or ) are extracted.)"
             )
 
                                                         
@@ -91,9 +91,9 @@ class BaseImagingCoreDataset(Dataset):
             "session",
             "subject_session",
             "experiment_name",
-            "d_spike",
+            "d_image",
             "d_kinem",
-            "spike_channel_names",
+            "image_channel_names",
             "path",
             "split",
             "segment_filename",
@@ -131,19 +131,19 @@ class BaseImagingCoreDataset(Dataset):
     @property
     def processed_raw_data_dir(self):
         """
-        filename for processed raw data, i.e., spike extraction
+        filename for processed raw data, i.e., image extraction
         """
-        z_score_spike_name, z_score_kinem_name = self.get_z_scoring_names()
+        z_score_image_name, z_score_kinem_name = self.get_z_scoring_names()
         multi_unit_name = "_multiUnit" if self.config.extract_multi_unit else ""
         return os.path.join(
             self.config.save_dir,
-            f"processed_raw_data{multi_unit_name}_{self.config.delta:.0f}ms_{z_score_spike_name}_{z_score_kinem_name}{self.fr_threshold_name}",
+            f"processed_raw_data{multi_unit_name}_{self.config.delta:.0f}ms_{z_score_image_name}_{z_score_kinem_name}{self.fr_threshold_name}",
         )
 
     @property
     def processed_segments_data_dir(self):
         """
-        data dir for constructing the segmented trials from extracted spikes
+        data dir for constructing the segmented trials from extracted images
         """
         return os.path.join(
             self.config.save_dir,
@@ -223,16 +223,16 @@ class BaseImagingCoreDataset(Dataset):
         raise NotImplementedError
 
     def get_z_scoring_names(self):
-        if self.config.z_score_spike:
-            z_score_spike_name = "zScSpike"
+        if self.config.z_score_image:
+            z_score_image_name = "zScimage"
         else:
-            z_score_spike_name = "nozScSpike"
+            z_score_image_name = "nozScimage"
 
         if self.config.z_score_kinem:
             z_score_kinem_name = "zScKinem"
         else:
             z_score_kinem_name = "nozScKinem"
-        return z_score_spike_name, z_score_kinem_name
+        return z_score_image_name, z_score_kinem_name
 
     def get_processed_raw_data_file_path(self, subject, session):
         filename = f"{subject}_{session}.pt"
@@ -257,11 +257,11 @@ class BaseImagingCoreDataset(Dataset):
         """
         raise NotImplementedError
 
-    def get_channel_inds_above_fr_threshold(self, spike):
-        t_all = spike.shape[0] * self.config.delta / 1000              
-        fr_hz = spike.sum(0) / t_all
+    def get_channel_inds_above_fr_threshold(self, image):
+        t_all = image.shape[0] * self.config.delta / 1000              
+        fr_hz = image.sum(0) / t_all
         keep_bool = fr_hz >= self.config.fr_threshold
-        keep_inds = torch.arange(spike.shape[1])[keep_bool]
+        keep_inds = torch.arange(image.shape[1])[keep_bool]
         return keep_inds
 
     def process_single_session_raw_data(
@@ -293,12 +293,12 @@ class BaseImagingCoreDataset(Dataset):
 
         this part can be overwritten by each dataset class based on specific settings
         """
-        z_score_spike_name, z_score_kinem_name = self.get_z_scoring_names()
+        z_score_image_name, z_score_kinem_name = self.get_z_scoring_names()
 
-        if self.config.d_spike_multiple > 0:
-            d_spike_str = f"d_spike_mul{self.config.d_spike_multiple}"
+        if self.config.d_image_multiple > 0:
+            d_image_str = f"d_image_mul{self.config.d_image_multiple}"
         else:
-            d_spike_str = f"d_spike{self.config.d_spike}"
+            d_image_str = f"d_image{self.config.d_image}"
 
         trial_align_str = f"_trial_align{self.config.trial_align}"
         if self.config.trial_align:
@@ -307,9 +307,9 @@ class BaseImagingCoreDataset(Dataset):
             segment_length_str = f"_segment_length{segment_length}"
 
         processing_str = (
-            f"delta{self.config.delta:.0f}ms_{d_spike_str}{self.fr_threshold_name}{trial_align_str}"
+            f"delta{self.config.delta:.0f}ms_{d_image_str}{self.fr_threshold_name}{trial_align_str}"
             f"{segment_length_str}_val_ratio{self.config.val_ratio:.1e}_test_ratio{self.config.test_ratio:.1e}"
-            f"_{z_score_spike_name}_{z_score_kinem_name}{self.fr_threshold_name}"
+            f"_{z_score_image_name}_{z_score_kinem_name}{self.fr_threshold_name}"
         )
 
         if not self.config.sort_units:
@@ -427,18 +427,6 @@ class BaseImagingCoreDataset(Dataset):
         new_metadata_df = pd.DataFrame(new_metadata_df)
         self.metadata.concat(new_metadata_df=new_metadata_df)
 
-    @staticmethod
-    def sort_spikes_on_r2(spike, kinem):
-        scores = []
-        n = spike.shape[-1]
-        for i in range(n):
-            lr = LinearRegression()
-            lr.fit(spike[:, i : i + 1], kinem)
-
-            r2 = lr.score(spike[:, i : i + 1], kinem)
-            scores.append(r2)
-        sorted_inds = np.argsort(scores)[::-1]                    
-        return spike[:, sorted_inds.copy()], sorted_inds
 
     def process_single_session_segments(self, subject, session):
         raise NotImplementedError
@@ -460,14 +448,14 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
 
         assert (
             not self.config.extract_multi_unit
-        ), "Multi-unit spikes are not allowed for Neurotask datasets, neuron channel names are not available."
+        ), "Multi-unit images are not allowed for Neurotask datasets, neuron channel names are not available."
 
-        z_score_spike_name, z_score_kinem_name = self.get_z_scoring_names()
+        z_score_image_name, z_score_kinem_name = self.get_z_scoring_names()
 
-        if self.config.d_spike_multiple > 0:
-            d_spike_str = f"d_spike_mul{self.config.d_spike_multiple}"
+        if self.config.d_image_multiple > 0:
+            d_image_str = f"d_image_mul{self.config.d_image_multiple}"
         else:
-            d_spike_str = f"d_spike{self.config.d_spike}"
+            d_image_str = f"d_image{self.config.d_image}"
 
         trial_align_str = f"trial_align{self.config.trial_align}"
         if self.config.trial_align:
@@ -478,9 +466,9 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
             chunk_seg_str += f"_minTrialSegmentLength{self.config.min_trial_segment_length:.1e}_maxTrialSegmentLength{self.config.max_trial_segment_length:.1e}"
 
         processing_str = (
-            f"delta{self.config.delta:.0f}ms_{d_spike_str}{self.fr_threshold_name}_{chunk_seg_str}_{trial_align_str}"
+            f"delta{self.config.delta:.0f}ms_{d_image_str}{self.fr_threshold_name}_{chunk_seg_str}_{trial_align_str}"
             f"_segment_length{segment_length}_val_ratio{self.config.val_ratio:.1e}_test_ratio{self.config.test_ratio:.1e}"
-            f"_{z_score_spike_name}_{z_score_kinem_name}{self.fr_threshold_name}"
+            f"_{z_score_image_name}_{z_score_kinem_name}{self.fr_threshold_name}"
         )
 
         if not self.config.sort_units:
@@ -509,7 +497,7 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
         animal name or date. We will be using this identifier to assign unique names to subjects
         in each separate dataset, and sessions will be left as they are.
 
-        Therefore, make sure that subject names in SpikeAvailableSessions match <neurotask_dataset_identifier><subject_id> pattern.
+        Therefore, make sure that subject names in imageAvailableSessions match <neurotask_dataset_identifier><subject_id> pattern.
         """
         raise NotImplementedError
 
@@ -629,19 +617,19 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
     @property
     def processed_raw_data_dir(self):
         """
-        filename for processed raw data, i.e., spike extraction
+        filename for processed raw data, i.e., image extraction
         """
-        z_score_spike_name, z_score_kinem_name = self.get_z_scoring_names()
+        z_score_image_name, z_score_kinem_name = self.get_z_scoring_names()
         return os.path.join(
             self.config.save_dir,
-            f"processed_raw_data_{self.config.delta:.0f}ms_{z_score_spike_name}_{z_score_kinem_name}{self.fr_threshold_name}",
+            f"processed_raw_data_{self.config.delta:.0f}ms_{z_score_image_name}_{z_score_kinem_name}{self.fr_threshold_name}",
             self.neurotask_dataset_identifier,
         )
 
     @property
     def processed_segments_data_dir(self):
         """
-        data dir for constructing the segmented trials from extracted spikes
+        data dir for constructing the segmented trials from extracted images
         """
         return os.path.join(
             self.config.save_dir,
@@ -659,7 +647,7 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
     def process_raw_data(self):
         for i, filename in enumerate(self.raw_data_filenames):
             self.logger.info(
-                f"Raw data processing (i.e., spike and/or LFP extraction) for file {filename} starts."
+                f"Raw data processing (i.e., image and/or  extraction) for file {filename} starts."
             )
             raw_file_path = self.get_raw_data_file_path(filename=filename)
             self.logger.info(
@@ -702,14 +690,14 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
 
                 group[self.vel_columns] = cursor_vel
 
-            if self.config.z_score_spike:
-                spike_cols = [i for i in group.columns if i.startswith("Neuron")]
-                spike = torch.tensor(group[spike_cols].to_numpy())
+            if self.config.z_score_image:
+                image_cols = [i for i in group.columns if i.startswith("Neuron")]
+                image = torch.tensor(group[image_cols].to_numpy())
 
-                data_std = spike.std(dim=0)
+                data_std = image.std(dim=0)
                 data_std[data_std == 0] = 1
-                spike = (spike - spike.mean(dim=0)[None, :]) / data_std[None, :]
-                group[spike_cols] = spike
+                image = (image - image.mean(dim=0)[None, :]) / data_std[None, :]
+                group[image_cols] = image
 
             subject = list(self.available_sessions.keys())[df_subject - 1]
             session = f"{self.experiment_type}_{df_session}"
@@ -725,25 +713,25 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
         data_df = torch.load(processed_raw_data_path)
 
                                           
-        spike = data_df[
+        image = data_df[
             [i for i in data_df.columns if i.startswith("Neuron")]
         ].to_numpy()
         vel = data_df[self.vel_columns].to_numpy()
 
                                                            
-        all_spike = torch.tensor(spike, dtype=torch.float32)
+        all_image = torch.tensor(image, dtype=torch.float32)
         all_vel = torch.tensor(vel, dtype=torch.float32)
         if self.config.sort_units:
-            all_spike, sorted_spike_inds = self.sort_spikes_on_r2(
-                spike=all_spike, kinem=all_vel
+            all_image, sorted_image_inds = self.sort_images_on_r2(
+                image=all_image, kinem=all_vel
             )
         else:
-            sorted_spike_inds = None
+            sorted_image_inds = None
 
         if self.config.chunk_segments:
                                                                                                      
                                                         
-            num_steps = all_spike.shape[0]
+            num_steps = all_image.shape[0]
 
             num_steps_in_segment = int(
                 self.config.segment_length / (self.config.delta / 1000)
@@ -752,8 +740,8 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                                                                   
             num_discard_steps = int(num_steps % num_steps_in_segment)
 
-            segmented_spike = rearrange(
-                all_spike[:-num_discard_steps, :],
+            segmented_image = rearrange(
+                all_image[:-num_discard_steps, :],
                 "(b t) n -> b t n",
                 t=num_steps_in_segment,
             )
@@ -762,7 +750,7 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                 "(b t) n -> b t n",
                 t=num_steps_in_segment,
             )
-            segmented_spike = list(segmented_spike)
+            segmented_image = list(segmented_image)
             segmented_vel = list(segmented_vel)
         else:
                                                                        
@@ -794,21 +782,21 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                     raise f"{e}, please check {self.config.event_align} exists in the dataframe."
 
             trial_ids = data_df["trial_id"].unique()
-            segmented_spike, segmented_vel = [], []
+            segmented_image, segmented_vel = [], []
             for tr in trial_ids:
                 data_df_trial = data_df[data_df["trial_id"] == tr]
-                spike = data_df_trial[
+                image = data_df_trial[
                     [i for i in data_df_trial.columns if i.startswith("Neuron")]
                 ].to_numpy()
                 vel = data_df_trial[self.vel_columns].to_numpy()
 
-                if sorted_spike_inds is not None:
-                    spike = spike[..., sorted_spike_inds]
+                if sorted_image_inds is not None:
+                    image = image[..., sorted_image_inds]
 
-                spike = torch.tensor(spike, dtype=torch.float32)
+                image = torch.tensor(image, dtype=torch.float32)
                 vel = torch.tensor(vel, dtype=torch.float32)
 
-                num_steps = spike.shape[0]
+                num_steps = image.shape[0]
                 max_trial_segment_steps = int(
                     self.config.max_trial_segment_length / (self.config.delta / 1000)
                 )
@@ -818,12 +806,12 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                 num_discard_steps = int(num_steps % max_trial_segment_steps)
 
                 if num_discard_steps >= min_trial_segment_steps:
-                    segmented_spike.append(spike[-num_discard_steps:, :])
+                    segmented_image.append(image[-num_discard_steps:, :])
                     segmented_vel.append(vel[-num_discard_steps:, :])
 
                 if num_steps >= max_trial_segment_steps:
-                    spike = rearrange(
-                        spike[:-num_discard_steps, :],
+                    image = rearrange(
+                        image[:-num_discard_steps, :],
                         "(b t) n -> b t n",
                         t=max_trial_segment_steps,
                     )
@@ -832,26 +820,26 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                         "(b t) n -> b t n",
                         t=max_trial_segment_steps,
                     )
-                    for j in range(spike.shape[0]):
-                        segmented_spike.append(spike[j, :, :])
+                    for j in range(image.shape[0]):
+                        segmented_image.append(image[j, :, :])
                         segmented_vel.append(vel[j, :, :])
 
                                         
         metadata_df = []
-        num_segments = len(segmented_spike)
+        num_segments = len(segmented_image)
         for i in range(num_segments):
-            spike, vel = segmented_spike[i], segmented_vel[i]
+            image, vel = segmented_image[i], segmented_vel[i]
 
                                     
-            d_spike = spike.shape[-1]
-            if self.config.d_spike_multiple > 0:
-                d_spike_keep = d_spike - (d_spike % self.config.d_spike_multiple)
+            d_image = image.shape[-1]
+            if self.config.d_image_multiple > 0:
+                d_image_keep = d_image - (d_image % self.config.d_image_multiple)
             else:
-                d_spike_keep = self.config.d_spike
-            spike = spike[..., :d_spike_keep]
+                d_image_keep = self.config.d_image
+            image = image[..., :d_image_keep]
 
                               
-            data_dict = dict(spike=spike.clone(), kinem=vel.clone())
+            data_dict = dict(image=image.clone(), kinem=vel.clone())
             segment_path, segment_filename = self.save_segment_data(
                 data_dict=data_dict,
                 subject=subject,
@@ -865,9 +853,9 @@ class BaseNeurotaskDataset(BaseImagingCoreDataset):
                 session=session,
                 subject_session=f"{subject}_{session}",
                 experiment_name=self.experiment_type,
-                d_spike=spike.shape[-1],
+                d_image=image.shape[-1],
                 d_kinem=vel.shape[-1],
-                spike_channel_names=[],
+                image_channel_names=[],
                 path=segment_path,
                 split="train",
                 segment_filename=segment_filename,
@@ -896,24 +884,24 @@ class BaseMultimodalDataset(BaseImagingCoreDataset):
     @property
     def column_names(self):
         return super().column_names + [
-            "d_lfp",
-            "lfp_channel_names",
+            "d_",
+            "_channel_names",
         ]
 
     @property
-    def lfp_processing_str(self):
-        if self.config.z_score_lfp:
-            z_score_lfp_name = "zScLFP"
+    def _processing_str(self):
+        if self.config.z_score_:
+            z_score__name = "zSc"
         else:
-            z_score_lfp_name = "nozScLFP"
-        return f"LFP_lpCut{self.config.lfp_lp_cutoff:.1e}Hz_hpCut{self.config.lfp_hp_cutoff:.1e}Hz_{z_score_lfp_name}"
+            z_score__name = "nozSc"
+        return f"_lpCut{self.config._lp_cutoff:.1e}Hz_hpCut{self.config._hp_cutoff:.1e}Hz_{z_score__name}"
 
     @property
     def processed_raw_data_dir(self):
         """
-        filename for processed raw data, i.e., spike extraction
+        filename for processed raw data, i.e., image extraction
         """
-        return super().processed_raw_data_dir + f"_{self.lfp_processing_str}"
+        return super().processed_raw_data_dir + f"_{self._processing_str}"
 
     def get_segments_processing_hash(
         self,
@@ -927,12 +915,12 @@ class BaseMultimodalDataset(BaseImagingCoreDataset):
             existing_data_segment_length=existing_data_segment_length,
         )
 
-        if self.config.d_lfp_multiple > 0:
-            d_lfp_str = f"d_lfp_mul{self.config.d_lfp_multiple}"
+        if self.config.d__multiple > 0:
+            d__str = f"d__mul{self.config.d__multiple}"
         else:
-            d_lfp_str = f"d_lfp{self.config.d_lfp}"
+            d__str = f"d_{self.config.d_}"
 
-        processing_str = f"{processing_str}_{self.lfp_processing_str}_{d_lfp_str}"
+        processing_str = f"{processing_str}_{self._processing_str}_{d__str}"
         hash_str = hashlib.sha256(bytes(processing_str, "utf-8")).hexdigest()[:5]
         return processing_str, hash_str
 
@@ -1011,7 +999,7 @@ class BaseImagingDataset(BaseImagingCoreDataset):
     @property
     def processed_raw_data_dir(self):
         """
-        filename for processed raw data, i.e., spike extraction
+        filename for processed raw data, i.e., image extraction
         """
         z_score_image_name, z_score_beh_name = self.get_z_scoring_names()
 
@@ -1031,7 +1019,7 @@ class BaseImagingDataset(BaseImagingCoreDataset):
     @property
     def processed_segments_data_dir(self):
         """
-        data dir for constructing the segmented trials from extracted spikes
+        data dir for constructing the segmented trials from extracted images
         """
         return os.path.join(
             self.config.save_dir,
@@ -1337,7 +1325,7 @@ class BaseImagingDatasetOld(BaseImagingDataset):
     @property
     def processed_raw_data_dir(self):
         """
-        filename for processed raw data, i.e., spike extraction
+        filename for processed raw data, i.e., image extraction
         """
         z_score_image_name, z_score_beh_name = self.get_z_scoring_names()
         return os.path.join(
@@ -1351,7 +1339,7 @@ class BaseImagingDatasetOld(BaseImagingDataset):
     @property
     def processed_segments_data_dir(self):
         """
-        data dir for constructing the segmented trials from extracted spikes
+        data dir for constructing the segmented trials from extracted images
         """
         return os.path.join(
             self.config.save_dir,
