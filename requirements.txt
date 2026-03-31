@@ -1,0 +1,15 @@
+torch
+torchvision
+xformers
+numpy
+pandas
+scipy
+scikit-learn
+einops
+omegaconf
+tqdm
+requests
+beautifulsoup4
+opencv-python
+pynwb
+pyyaml

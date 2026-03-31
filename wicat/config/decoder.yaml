@@ -1,0 +1,10 @@
+decoder:
+  class_name: MLP
+  layer_list: []
+  activation: linear
+  dropout: 0.1
+  use_final_dropout: false
+  use_identity: false
+  time_bins: 205
+  patches_per_time: 16
+  patch_merge: mean

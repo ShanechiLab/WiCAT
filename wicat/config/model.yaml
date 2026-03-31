@@ -1,0 +1,26 @@
+model:
+  tokenizer:
+    class_name: ImagePatchTokenizer
+    temporal_patch_size: 1
+    spatial_patch_size: 32
+    d_hidden: 512
+    activation: tanh
+    learn_patch_embedding: true
+    learn_global_patch: true
+    use_conv_for_image: false
+    dropout: 0.1
+
+  backbone:
+    num_layers: 8
+    d_hidden: 512
+    mlp_ratio: 4
+    norm: rmsnorm
+    norm_eps: 1.0e-8
+    activation: gelu
+    num_heads: 8
+    return_states: false
+    dropout: 0.1
+    norm_first: true
+
+  head:
+    output_dim: 2

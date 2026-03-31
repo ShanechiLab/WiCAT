@@ -1,0 +1,11 @@
+subject,session,subject_session,experiment_name,d_imaging,d_binary_beh,d_kinem,imaging_modality,path,split,segment_filename,imaging_channel_names
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_000_mSM30_10-Oct-2017_9.pt,val,mSM30_10-Oct-2017_9.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_001_mSM30_10-Oct-2017_42.pt,val,mSM30_10-Oct-2017_42.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_002_mSM30_10-Oct-2017_33.pt,val,mSM30_10-Oct-2017_33.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_003_mSM30_10-Oct-2017_311.pt,val,mSM30_10-Oct-2017_311.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_004_mSM30_10-Oct-2017_272.pt,val,mSM30_10-Oct-2017_272.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_005_mSM30_10-Oct-2017_377.pt,val,mSM30_10-Oct-2017_377.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_006_mSM30_10-Oct-2017_55.pt,val,mSM30_10-Oct-2017_55.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_007_mSM30_10-Oct-2017_268.pt,val,mSM30_10-Oct-2017_268.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_008_mSM30_10-Oct-2017_245.pt,val,mSM30_10-Oct-2017_245.pt,500
+mSM30,10-Oct-2017,mSM30_10-Oct-2017,StimLeverLick,"[128, 128, 500]",7,5,widefield,dataset/seg_009_mSM30_10-Oct-2017_113.pt,val,mSM30_10-Oct-2017_113.pt,500

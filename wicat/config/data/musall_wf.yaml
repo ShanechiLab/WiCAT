@@ -1,0 +1,19 @@
+dataset:
+  name: musall
+  _target_: wicat.data.musall_dataset.MusallImagingDataset
+  config:
+    save_dir: ./data/musall_processed
+    raw_data_base_dir: ./data/musall_raw
+    raw_data_dir: ./data/musall_raw
+    paradigm: SpatialDisc
+    imaging_dtype: Widefield
+    segment_length: 6.8
+    val_ratio: 0.1
+    test_ratio: 0.1
+    force_reprocess_stage1: false
+    force_reprocess_stage2: false
+    z_score_imaging: true
+    z_score_binary_behavior: false
+    trial_align: true
+    segment_from_existing_data: false
+    existing_data_segment_length: null
