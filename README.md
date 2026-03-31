@@ -1,6 +1,6 @@
 # WiCAT (Anonymous Release)
 
-This repository is an anonymized minimal WiCAT codebase for loading a pretrained model and running a small decoder finetuning task.
+This repository is an anonymized WiCAT codebase for loading a pretrained model and running a small decoder finetuning task.
 
 ## Included assets
 
