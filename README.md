@@ -2,11 +2,11 @@
 
 ## Publication
 
-This repository provides the implementation of WiCAT, a framework for cross-subject modeling of widefield imaging neural data. Mohammad Hosseini and Maryam M. Shanechi. [_WiCAT: Cross-Subject Modeling of Widefield Imaging Neural Data_](https://openreview.net/forum?id=pZq2RMptsQ).
+This repository provides the implementation of WiCAT, a framework for cross-subject modeling of widefield imaging neural data. Mohammad Hosseini, Eray Erturk, Saba Hashemi, and Maryam M. Shanechi. [_WiCAT: Cross-Subject Modeling of Widefield Imaging Neural Data_](https://openreview.net/forum?id=pZq2RMptsQ).
 
 WiCAT is a compact public release for loading pretrained cross-subject widefield-imaging encoders and fitting a lightweight behavioral regression head on top of the frozen representation.
 
-The release is intentionally small: it includes the model code, a tiny processed Musall-style example dataset, metadata for that example subset, pretrained encoder weights, and a training entry point that fits only the downstream decoder head.
+In this repo we include the model code, a tiny processed Musall-style example dataset, metadata for that example subset, pretrained encoder weights, and a training entry point that fits only the downstream decoder head.
 
 ## What The Model Does
 
@@ -62,21 +62,8 @@ The model uses PyTorch, xFormers attention, einops, pandas/numpy, and PyYAML. Us
 
 ## Restore Pretrained Weights From Split Archives
 
-If the raw checkpoint file is not present, reconstruct it from the split archive parts.
+The raw checkpoint file is not present; reconstruct it from the split archive parts.
 
-Existing checkpoint:
-
-```bash
-cat pretrained_models/pret_weights/best-model-musall.z01 \
-    pretrained_models/pret_weights/best-model-musall.z02 \
-    pretrained_models/pret_weights/best-model-musall.z03 \
-    pretrained_models/pret_weights/best-model-musall.z04 \
-    pretrained_models/pret_weights/best-model-musall.z05 \
-    pretrained_models/pret_weights/best-model-musall.zip \
-    > pretrained_models/pret_weights/best-model-musall.full.zip
-
-unzip pretrained_models/pret_weights/best-model-musall.full.zip -d pretrained_models/
-```
 
 All-dataset checkpoint:
 
@@ -90,6 +77,19 @@ cat pretrained_models/pret_weights/best-model-all.z01 \
     > pretrained_models/pret_weights/best-model-all.full.zip
 
 unzip pretrained_models/pret_weights/best-model-all.full.zip -d pretrained_models/
+```
+Existing Musall dataset checkpoint:
+
+```bash
+cat pretrained_models/pret_weights/best-model-musall.z01 \
+    pretrained_models/pret_weights/best-model-musall.z02 \
+    pretrained_models/pret_weights/best-model-musall.z03 \
+    pretrained_models/pret_weights/best-model-musall.z04 \
+    pretrained_models/pret_weights/best-model-musall.z05 \
+    pretrained_models/pret_weights/best-model-musall.zip \
+    > pretrained_models/pret_weights/best-model-musall.full.zip
+
+unzip pretrained_models/pret_weights/best-model-musall.full.zip -d pretrained_models/
 ```
 
 ## Fit A Regression Decoder On Top Of A Pretrained Encoder
@@ -134,12 +134,12 @@ Then update `metadata_csv`, `checkpoint_path`, and `training.save_decoder_path` 
 
 ## Checkpoint Format
 
-The public checkpoints are not full Lightning training checkpoints. They are plain PyTorch state dicts containing only:
+The public checkpoints are not full pretraining checkpoints. They are plain PyTorch state dicts containing:
 
 - `tokenizer.*`
 - `backbone.*`
 
-MAE reconstruction heads, optimizer state, callbacks, trainer state, and internal experiment metadata are removed. This keeps the release checkpoint focused on the pretrained encoder used by WiCAT.
+Pretraining codes, MAE reconstruction heads, optimizer state, callbacks, trainer state, and internal experiment metadata are removed for now.
 
 ## Citation
 
