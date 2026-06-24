@@ -147,7 +147,7 @@ Please cite the paper linked on the OpenReview page above when using this code o
 
 ## License
 
-Copyright (c) 2025 University of Southern California
+Copyright (c) 2026 University of Southern California
 
 See full notice in [LICENSE.md](LICENSE.md).
 
