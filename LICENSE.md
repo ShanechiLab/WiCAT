@@ -1,4 +1,4 @@
-This software is Copyright (c) 2025 The University of Southern California. All Rights Reserved. Permission to use, copy, modify, and distribute this software and its documentation for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that the above copyright notice, this paragraph and the following three paragraphs appear in all copies.
+This software is Copyright (c) 2026 The University of Southern California. All Rights Reserved. Permission to use, copy, modify, and distribute this software and its documentation for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that the above copyright notice, this paragraph and the following three paragraphs appear in all copies.
 
 Permission to make commercial use of this software may be obtained by contacting:
 USC Stevens Center for Innovation
