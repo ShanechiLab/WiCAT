@@ -1,8 +1,10 @@
 # WiCAT
 
-WiCAT is a compact public release for loading pretrained cross-subject widefield-imaging encoders and fitting a lightweight behavioral regression head on top of the frozen representation.
+## Publication
 
-Paper page: https://openreview.net/forum?id=pZq2RMptsQ
+This repository provides the implementation of WiCAT, a framework for cross-subject modeling of widefield imaging neural data. Mohammad Hosseini and Maryam M. Shanechi. [_WiCAT: Cross-Subject Modeling of Widefield Imaging Neural Data_](https://openreview.net/forum?id=pZq2RMptsQ).
+
+WiCAT is a compact public release for loading pretrained cross-subject widefield-imaging encoders and fitting a lightweight behavioral regression head on top of the frozen representation.
 
 The release is intentionally small: it includes the model code, a tiny processed Musall-style example dataset, metadata for that example subset, pretrained encoder weights, and a training entry point that fits only the downstream decoder head.
 
@@ -142,3 +144,12 @@ MAE reconstruction heads, optimizer state, callbacks, trainer state, and interna
 ## Citation
 
 Please cite the paper linked on the OpenReview page above when using this code or pretrained models.
+
+## License
+
+Copyright (c) 2025 University of Southern California
+
+See full notice in [LICENSE.md](LICENSE.md).
+
+Mohammad Hosseini and Maryam M. Shanechi  
+Shanechi Lab, University of Southern California
