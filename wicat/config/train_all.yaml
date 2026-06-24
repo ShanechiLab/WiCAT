@@ -1,0 +1,21 @@
+seed: 42
+device: cuda
+dtype: bfloat16
+
+checkpoint_path: pretrained_models/best-model-all.ckpt
+strict_load: false
+
+metadata_csv: pretrained_models/metadata_5257c_local10.csv
+model_config: wicat/config/model.yaml
+decoder_config: wicat/config/decoder.yaml
+
+training:
+  train_decoder: true
+  epochs: 20
+  lr: 0.001
+  weight_decay: 0.0001
+  save_decoder_path: pretrained_models/decoder_head.pt
+
+dataset:
+  name: musall
+  config_path: wicat/config/data/musall_wf.yaml
