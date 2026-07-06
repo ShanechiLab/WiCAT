@@ -1,6 +1,6 @@
 # WiCAT
 
-WiCAT is a compact public release for cross-subject modeling of widefield
+WiCAT is a compact public release for cross-subject modeling of brain widefield
 calcium imaging movies. This repository focuses on loading pretrained WiCAT
 encoders and fitting a lightweight behavioral regression decoder on top of the
 frozen representation.
@@ -25,6 +25,10 @@ Paper: Mohammad Hosseini, Eray Erturk, Saba Hashemi, and Maryam M. Shanechi,
 
 WiCAT provides a practical starting point for using pretrained widefield imaging
 representations in downstream behavioral decoding experiments.
+
+<p align="center">
+  <img src="docs/assets/highlight.png" alt="WiCAT highlights" width="850">
+</p>
 
 This release includes:
 
