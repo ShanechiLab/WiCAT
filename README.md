@@ -1,52 +1,60 @@
 # WiCAT
 
-WiCAT is a compact public release for cross-subject modeling of brain widefield
-calcium imaging movies. This repository focuses on loading pretrained WiCAT
-encoders and fitting a lightweight behavioral regression decoder on top of the
-frozen representation.
+WiCAT is a foundation model for multi-subject widefield calcium imaging.
+It learns shared brain-wide representations across subjects using
+atlas-aligned spatiotemporal tokenization, global spatial embeddings, and
+self-supervised masked reconstruction. In the paper, these representations
+support cross-subject behavior decoding, zero-shot decoding in unseen subjects,
+cross-dataset transfer, and left-out brain region reconstruction.
 
-Paper: Mohammad Hosseini, Eray Erturk, Saba Hashemi, and Maryam M. Shanechi,
-[_WiCAT: Cross-Subject Modeling of Widefield Imaging Neural Data_](https://openreview.net/forum?id=pZq2RMptsQ).
+**Paper:** Sayed Mohammad Hosseini, Eray Erturk, Saba Hashemi, and Maryam M.
+Shanechi, [_WiCAT: Cross-Subject Modeling of Widefield Imaging Neural
+Data_](https://openreview.net/forum?id=pZq2RMptsQ).
 
-## Table Of Contents
+This repository provides a compact public release focused on using pretrained
+WiCAT models. It implements the WiCAT forward model, pretrained checkpoint
+loading, frozen-representation extraction, and downstream finetuning of a
+lightweight behavioral decoder. The release is intended as a practical starting
+point for applying WiCAT representations to behavior decoding experiments.
 
-- [Highlights](#highlights)
-- [Environment](#environment)
+<p align="center">
+  <img src="docs/assets/highlight.png" alt="WiCAT overview" width="850">
+</p>
+
+## Table of Contents
+
+- [Repository Scope](#repository-scope)
+- [Installation](#installation)
 - [Pretrained Checkpoints](#pretrained-checkpoints)
-- [Quickstart Finetuning](#quickstart-finetuning)
-- [Finetuning Details](#finetuning-details)
+- [Run a Finetuning Example](#run-a-finetuning-example)
+- [Finetuning Workflow](#finetuning-workflow)
 - [Dataset Sources](#dataset-sources)
 - [Processing Full Datasets](#processing-full-datasets)
-- [Finetuning On Your Own Segments](#finetuning-on-your-own-segments)
+- [Finetuning on Your Own Segments](#finetuning-on-your-own-segments)
 - [Citation](#citation)
 - [License](#license)
 
-## Highlights
-
-WiCAT provides a practical starting point for using pretrained widefield imaging
-representations in downstream behavioral decoding experiments.
-
-<p align="center">
-  <img src="docs/assets/highlight.png" alt="WiCAT highlights" width="850">
-</p>
+## Repository Scope
 
 This release includes:
 
-- Pretrained WiCAT encoder checkpoints for Musall and multi-dataset widefield
-  imaging experiments.
-- A tokenizer and Transformer backbone for converting widefield movies into
-  latent token sequences.
-- A lightweight MLP decoder for behavioral regression.
+- WiCAT tokenizer and Transformer backbone definitions for widefield movies.
+- Pretrained WiCAT encoder checkpoints for Musall and multi-dataset experiments.
+- Forward-model utilities for loading checkpoints and extracting frozen
+  representations.
+- A lightweight MLP decoder for time-resolved behavioral regression.
+- Example YAML configs for model setup, decoder finetuning, and dataset
+  processing.
 - Processing utilities for the Musall and Kondo widefield datasets.
-- YAML configs for model setup, finetuning, and dataset processing.
-- A small processed Musall-style example dataset for quickly testing the
-  finetuning workflow.
+- A small processed Musall-style example dataset for testing the finetuning
+  workflow.
 
 The main tutorial entry point is [`wicat/train.py`](wicat/train.py). It loads a
-pretrained encoder, freezes the representation model, trains a downstream
+pretrained WiCAT encoder, freezes the tokenizer and Transformer backbone,
+spatially pools the latent tokens at each time point, trains a downstream
 decoder, saves the decoder head, and runs a sample forward pass.
 
-## Environment
+## Installation
 
 Create an environment and install dependencies:
 
@@ -59,8 +67,8 @@ conda activate wicat
 pip install -r requirements.txt
 ```
 
-Use a CUDA-enabled PyTorch/xFormers build when running on GPU. If you only want
-to run on CPU, edit the train YAML and set:
+Use a CUDA-enabled PyTorch/xFormers build when running on GPU. To run on CPU,
+edit the train YAML and set:
 
 ```yaml
 device: cpu
@@ -100,16 +108,15 @@ cat pretrained_models/pret_weights/best-model-musall.z01 \
 unzip pretrained_models/pret_weights/best-model-musall.full.zip -d pretrained_models/
 ```
 
-The checkpoints are plain PyTorch state dicts containing tokenizer and backbone
-parameters. They are loaded by [`wicat/model_setup.py`](wicat/model_setup.py)
-and are directly compatible with the model definition in
-[`wicat/config/model.yaml`](wicat/config/model.yaml).
+The checkpoints are PyTorch state dictionaries containing tokenizer and
+Transformer backbone parameters. They are loaded by
+[`wicat/model_setup.py`](wicat/model_setup.py) and are compatible with the model
+definition in [`wicat/config/model.yaml`](wicat/config/model.yaml).
 
-## Quickstart Finetuning
+## Run a Finetuning Example
 
-The quickstart uses the processed example segments in
-[`pretrained_models/dataset/`](pretrained_models/dataset/) and the example
-metadata table
+The example uses processed Musall-style segments in
+[`pretrained_models/dataset/`](pretrained_models/dataset/) and the metadata table
 [`pretrained_models/metadata_5257c_local10.csv`](pretrained_models/metadata_5257c_local10.csv).
 
 Fit a regression decoder using the Musall pretrained encoder:
@@ -127,28 +134,29 @@ python -m wicat.train --config wicat/config/train_all.yaml
 The two example configs are:
 
 - [`wicat/config/train.yaml`](wicat/config/train.yaml): Musall pretrained encoder.
-- [`wicat/config/train_all.yaml`](wicat/config/train_all.yaml): multi-dataset pretrained encoder.
+- [`wicat/config/train_all.yaml`](wicat/config/train_all.yaml): multi-dataset
+  pretrained encoder.
 
 The training script:
 
 1. Loads metadata from `metadata_csv`.
-2. Builds the tokenizer/backbone/decoder from
+2. Builds the tokenizer, backbone, and decoder from
    [`wicat/config/model.yaml`](wicat/config/model.yaml) and
    [`wicat/config/decoder.yaml`](wicat/config/decoder.yaml).
 3. Loads the pretrained encoder checkpoint from `checkpoint_path`.
 4. Freezes tokenizer and Transformer backbone parameters.
-5. Optimizes the decoder MLP with MSE loss against `kinem`.
+5. Trains the decoder MLP with MSE loss against `kinem`.
 6. Saves the decoder head to `training.save_decoder_path`.
 7. Runs a sample forward pass and prints output shape/dtype.
 
 For the default Musall example, a sample has 205 time bins, 16 spatial patches
-per time bin, and 512-dimensional latent tokens. The decoder receives a
-`[batch, 205, 512]` sequence after spatial pooling and predicts
+per time bin, and 512-dimensional latent tokens. After spatial pooling, the
+decoder receives a `[batch, 205, 512]` sequence and predicts
 `[batch, 205, d_kinem]`.
 
-## Finetuning Details
+## Finetuning the Pretrained Model
 
-Finetuning is controlled by a single YAML file. The key fields are:
+Finetuning is controlled by a single YAML file. Key fields are:
 
 ```yaml
 checkpoint_path: pretrained_models/best-model-all.ckpt
@@ -167,15 +175,12 @@ training:
 ```
 
 During finetuning, WiCAT maps each widefield movie to latent tokens with the
-pretrained tokenizer/backbone and trains a task-specific decoder on top. The
-default decoder in [`wicat/models/MLP.py`](wicat/models/MLP.py) operates on the
-spatially pooled latent sequence, so the prediction remains time-resolved. This
-is useful for behavior decoding targets such as kinematics, movement variables,
-or trial-aligned continuous regressors.
-
-The example script in [`wicat/train.py`](wicat/train.py) keeps the encoder fixed
-and trains the decoder parameters. This makes it easy to compare representations
-across checkpoints while using the same downstream decoder setup.
+pretrained tokenizer/backbone. The encoder remains frozen, and only the
+task-specific decoder is trained. The default decoder in
+[`wicat/models/MLP.py`](wicat/models/MLP.py) operates on spatially pooled latent
+tokens, so predictions remain time-resolved. This setup is useful for behavior
+decoding targets such as kinematics, movement variables, or trial-aligned
+continuous regressors.
 
 To run a larger finetuning experiment:
 
@@ -184,7 +189,11 @@ To run a larger finetuning experiment:
 3. Select a pretrained checkpoint with `checkpoint_path`.
 4. Adjust decoder dimensions in [`wicat/config/decoder.yaml`](wicat/config/decoder.yaml)
    if your behavioral target has a different `d_kinem`.
-5. Run `python -m wicat.train --config /path/to/your_train_config.yaml`.
+5. Run:
+
+```bash
+python -m wicat.train --config /path/to/your_train_config.yaml
+```
 
 ## Dataset Sources
 
@@ -244,8 +253,8 @@ data/kondo_raw/
     ...
 ```
 
-The Kondo loader scans `sub-*/*.nwb`, parses `ses-YYYY-MM-DD-{task,resting-state,sensory-stim}-dayN`,
-and writes a cache at:
+The Kondo loader scans `sub-*/*.nwb`, parses
+`ses-YYYY-MM-DD-{task,resting-state,sensory-stim}-dayN`, and writes a cache at:
 
 ```text
 data/kondo_processed/raw/session_info_cache.json
@@ -257,7 +266,8 @@ The dataset constructors run the full data lifecycle:
 
 1. Check/download raw data.
 2. Stage 1: convert raw files to processed full-session files.
-3. Stage 2: convert processed full-session files to trial/chunk segments and metadata.
+3. Stage 2: convert processed full-session files to trial/chunk segments and
+   metadata.
 
 The relevant YAML files are:
 
@@ -351,12 +361,12 @@ Kondo stage 2:
 
 - Builds task-aligned trial segments and resting-state chunks.
 - Selects behavior dimensions used by the default decoder task.
-- Filters bad chunks using the thresholds in the dataset config.
+- Filters bad chunks using thresholds in the dataset config.
 - Saves segment `.pt` files containing `imaging`, `kinem`, `binary_beh`,
   `subject`, and `session`.
 - Writes `metadata_<hash>.csv` in `save_dir`.
 
-## Finetuning On Your Own Segments
+## Finetuning on Your Own Segments
 
 To fit your own regression target, prepare a metadata CSV with at least:
 
@@ -396,7 +406,7 @@ python -m wicat.train --config /path/to/your_train_config.yaml
 
 For the example tutorial, [`wicat/train.py`](wicat/train.py) uses the compact
 metadata subset in `pretrained_models/`. For larger experiments, use the
-metadata emitted by the dataset processing stage and adjust the row selection,
+metadata emitted by the dataset processing stage and adjust row selection,
 batching, and split logic in the same script for your study design.
 
 The encoder is frozen by default, which makes downstream comparisons clean:
@@ -405,8 +415,16 @@ representation.
 
 ## Citation
 
-Please cite the paper linked on the OpenReview page above when using this code
-or pretrained models.
+Please cite the paper linked above when using this code or pretrained models.
+
+```bibtex
+@inproceedings{hosseini2026wicat,
+  title={WiCAT: Cross-Subject Modeling of Widefield Imaging Neural Data},
+  author={Hosseini, Sayed Mohammad and Erturk, Eray and Hashemi, Saba and Shanechi, Maryam M.},
+  booktitle={International Conference on Machine Learning},
+  year={2026}
+}
+```
 
 ## License
 
